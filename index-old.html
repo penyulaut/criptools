@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aplikasi Kriptografi Canggih</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="light-mode">
+    <div class="container">
+      <!-- Header -->
+      <header>
+        <div class="header-content">
+          <div>
+            <h1>🔐 Kriptografi Advanced</h1>
+            <p>
+              Aplikasi enkripsi & dekripsi multi-cipher dengan analisis keamanan
+            </p>
+          </div>
+          <div class="header-controls">
+            <button
+              class="btn-icon"
+              id="darkModeToggle"
+              onclick="toggleDarkMode()"
+              title="Toggle Dark Mode"
+            >
+              🌙
+            </button>
+            <button
+              class="btn-icon"
+              id="historyBtn"
+              onclick="showHistoryModal()"
+              title="Lihat History"
+            >
+              📋
+            </button>
+            <button
+              class="btn-icon"
+              id="settingsBtn"
+              onclick="showSettingsModal()"
+              title="Pengaturan"
+            >
+              ⚙️
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard layout (sidebar + main) -->
+      <div class="dashboard">
+        <!-- Navigation Tabs / Sidebar -->
+        <nav class="tabs-container sidebar">
+        <button class="tab-btn active" onclick="switchTab('encrypt')">
+          <span>🔒 Enkripsi/Dekripsi</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('visualize')">
+          <span>📊 Visualisasi</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('analysis')">
+          <span>📈 Analisis Keamanan</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('keygen')">
+          <span>🔑 Key Generator</span>
+        </button>
+        <!-- <button class="tab-btn" onclick="switchTab('compare')">
+          <span>⚖️ Perbandingan</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('benchmark')">
+          <span>⏱️ Benchmark</span>
+        </button> -->
+      </nav>
+
+      </nav>
+
+        <main>
+        <!-- TAB 1: Enkripsi/Dekripsi -->
+        <section id="encrypt-tab" class="tab-content active">
+          <div class="tabs-secondary">
+            <button
+              class="tab-secondary-btn active"
+              onclick="switchEncryptTab('basic', event)"
+            >
+              Dasar
+            </button>
+            <button
+              class="tab-secondary-btn"
+              onclick="switchEncryptTab('advanced', event)"
+            >
+              Modern (AES/RSA)
+            </button>
+            <button
+              class="tab-secondary-btn"
+              onclick="switchEncryptTab('file', event)"
+            >
+              Upload File
+            </button>
+            <button
+              class="tab-secondary-btn"
+              onclick="switchEncryptTab('realtime', event)"
+            >
+              Real-Time
+            </button>
+          </div>
+
+          <!-- Dasar Encryption -->
+          <div id="basic-encrypt" class="encrypt-section active">
+            <div class="section-title">
+              Enkripsi/Dekripsi Cipher Tradisional
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cipherSelect">Pilih Cipher:</label>
+                <select id="cipherSelect" onchange="updateKeyHint()">
+                  <option value="vigenere">Vigenere Standard</option>
+                  <option value="autokey">Auto-Key Vigenere</option>
+                  <option value="extended">Extended Vigenere</option>
+                  <option value="affine">Affine Cipher</option>
+                  <option value="playfair">Playfair Cipher</option>
+                  <option value="hill">Hill Cipher (2x2)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="cipherTextFormat">Format Output:</label>
+                <select id="cipherTextFormat">
+                  <option value="none">Tanpa spasi</option>
+                  <option value="group5">Kelompok 5-huruf</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="keyInput">Kunci:</label>
+              <div class="input-group">
+                <input type="text" id="keyInput" placeholder="Masukkan kunci" />
+                <button class="btn-secondary" onclick="generateSimpleKey()">
+                  Generate
+                </button>
+              </div>
+              <small id="keyHint" class="hint-text"></small>
+            </div>
+
+            <div class="form-group">
+              <label for="plaintextInput">Pesan:</label>
+              <textarea
+                id="plaintextInput"
+                placeholder="Masukkan plaintext atau ciphertext..."
+                rows="6"
+              ></textarea>
+            </div>
+
+            <div class="button-group">
+              <button class="btn-primary" onclick="encryptText()">
+                🔒 Encrypt
+              </button>
+              <button class="btn-primary" onclick="decryptText()">
+                🔓 Decrypt
+              </button>
+              <button class="btn-secondary" onclick="copyOutput()">
+                📋 Copy Output
+              </button>
+              <button class="btn-secondary" onclick="clearForm()">
+                🗑️ Clear
+              </button>
+            </div>
+
+            <div class="output-area">
+              <label>Output:</label>
+              <div class="output-box" id="basicOutput"></div>
+              <button class="btn-secondary" onclick="downloadOutput('basic')">
+                ⬇️ Download
+              </button>
+            </div>
+          </div>
+
+          <!-- Advanced (AES/RSA) -->
+          <div id="advanced-encrypt" class="encrypt-section">
+            <div class="section-title">Enkripsi Modern (AES / RSA)</div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="modernAlgorithm">Algoritma:</label>
+                <select id="modernAlgorithm">
+                  <option value="aes">AES (Simplified)</option>
+                  <option value="rsa">RSA (Simplified)</option>
+                  <option value="xor">XOR Stream</option>
+                  <option value="substitution">Advanced Substitution</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="keySize">Ukuran Key (bits):</label>
+                <select id="keySize">
+                  <option value="128">128</option>
+                  <option value="256">256</option>
+                  <option value="512">512</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="modernKey">Kunci:</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="modernKey"
+                  placeholder="Atau generate otomatis"
+                />
+                <button class="btn-secondary" onclick="generateModernKey()">
+                  Generate Key
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="modernInput">Plaintext:</label>
+              <textarea
+                id="modernInput"
+                placeholder="Masukkan teks untuk dienkripsi..."
+                rows="6"
+              ></textarea>
+            </div>
+
+            <div class="button-group">
+              <button class="btn-primary" onclick="encryptModern()">
+                🔐 Encrypt (Modern)
+              </button>
+              <button class="btn-primary" onclick="decryptModern()">
+                🔓 Decrypt (Modern)
+              </button>
+              <button class="btn-secondary" onclick="showKeyPair()">
+                🔑 Lihat Key Pair
+              </button>
+            </div>
+
+            <div class="output-area">
+              <label>Output (Hex):</label>
+              <div class="output-box" id="modernOutput"></div>
+              <button class="btn-secondary" onclick="downloadOutput('modern')">
+                ⬇️ Download
+              </button>
+            </div>
+          </div>
+
+          <!-- File Upload -->
+          <div id="file-encrypt" class="encrypt-section">
+            <div class="section-title">Enkripsi File</div>
+
+            <div class="file-upload-area">
+              <input
+                type="file"
+                id="fileInput"
+                accept=".txt,.pdf,.doc,.docx,.jpg,.png"
+                onchange="handleFileUpload()"
+              />
+              <div id="fileInfo" class="file-info"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="fileAlgorithm">Algoritma:</label>
+              <select id="fileAlgorithm">
+                <option value="">Pilih algoritma</option>
+                <option value="extended">Extended Vigenere</option>
+                <option value="aes">AES</option>
+                <option value="xor">XOR Stream</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="fileKey">Kunci File:</label>
+              <div class="input-group">
+                <input type="text" id="fileKey" placeholder="Masukkan kunci" />
+                <button
+                  class="btn-secondary"
+                  onclick="generateSimpleKey('file')"
+                >
+                  Generate
+                </button>
+              </div>
+            </div>
+
+            <div class="button-group">
+              <button class="btn-primary" onclick="encryptFile()">
+                🔒 Encrypt File
+              </button>
+              <button class="btn-primary" onclick="decryptFile()">
+                🔓 Decrypt File
+              </button>
+            </div>
+          </div>
+
+          <!-- Real-Time Encryption -->
+          <div id="realtime-encrypt" class="encrypt-section">
+            <div class="section-title">Real-Time Encryption</div>
+
+            <div class="realtime-toggle">
+              <label for="realtimeToggle">Aktifkan Real-Time Mode:</label>
+              <input
+                type="checkbox"
+                id="realtimeToggle"
+                onchange="toggleRealtimeMode()"
+              />
+              <span id="realtimeStatus" class="status-indicator">OFF</span>
+            </div>
+
+            <div class="form-group">
+              <label for="realtimeCipher">Cipher:</label>
+              <select id="realtimeCipher">
+                <option value="vigenere">Vigenere</option>
+                <option value="affine">Affine</option>
+                <option value="substitution">Substitution</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="realtimeKey">Kunci:</label>
+              <input
+                type="text"
+                id="realtimeKey"
+                placeholder="Kunci untuk real-time encryption"
+                oninput="updateRealtime()"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="realtimeInput">Ketikan pesan:</label>
+              <textarea
+                id="realtimeInput"
+                placeholder="Mulai mengetik di sini..."
+                rows="6"
+                oninput="updateRealtime()"
+              ></textarea>
+            </div>
+
+            <div class="output-area">
+              <label>Hasil Real-Time:</label>
+              <div class="output-box" id="realtimeOutput"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: Visualisasi -->
+        <section id="visualize-tab" class="tab-content">
+          <div class="section-title">Visualisasi Proses Enkripsi</div>
+
+          <div class="visualization-controls">
+            <div class="form-group">
+              <label for="vizAlgorithm">Pilih Algoritma:</label>
+              <select id="vizAlgorithm" onchange="updateVisualization()">
+                <option value="vigenere">Vigenere</option>
+                <option value="affine">Affine</option>
+                <option value="playfair">Playfair</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="vizPlaintext">Plaintext:</label>
+              <input
+                type="text"
+                id="vizPlaintext"
+                placeholder="Masukkan teks (max 10 karakter)"
+                maxlength="10"
+                oninput="updateVisualization()"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="vizKey">Kunci:</label>
+              <input
+                type="text"
+                id="vizKey"
+                placeholder="Masukkan kunci"
+                oninput="updateVisualization()"
+              />
+            </div>
+          </div>
+
+          <div class="visualization-area">
+            <div id="vizContainer"></div>
+          </div>
+
+          <div class="steps-display">
+            <h3>Langkah-langkah Transformasi:</h3>
+            <div id="stepsContainer"></div>
+          </div>
+        </section>
+
+        <!-- TAB 3: Analisis Keamanan -->
+        <section id="analysis-tab" class="tab-content">
+          <div class="section-title">
+            Analisis Keamanan & Frequency Analysis
+          </div>
+
+          <div class="analysis-controls">
+            <div class="form-group">
+              <label for="analysisText">Masukkan Teks:</label>
+              <textarea
+                id="analysisText"
+                placeholder="Paste ciphertext untuk dianalisis..."
+                rows="6"
+              ></textarea>
+            </div>
+
+            <button class="btn-primary" onclick="performAnalysis()">
+              📊 Analisis
+            </button>
+          </div>
+
+          <div id="analysisResults" class="analysis-results">
+            <div class="analysis-section">
+              <h3>📈 Distribusi Frekuensi Huruf</h3>
+              <div id="frequencyChart"></div>
+            </div>
+
+            <div class="analysis-section">
+              <h3>🔐 Entropi & Keamanan</h3>
+              <div id="entropyDisplay"></div>
+            </div>
+
+            <div class="analysis-section">
+              <h3>🎯 Statistik Umum</h3>
+              <div id="statsDisplay"></div>
+            </div>
+
+            <div class="analysis-section">
+              <h3>💪 Kekuatan Enkripsi</h3>
+              <div id="strengthDisplay"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: Key Generator -->
+        <section id="keygen-tab" class="tab-content">
+          <div class="section-title">Generator Kunci Aman</div>
+
+          <div class="keygen-controls">
+            <div class="form-group">
+              <label for="keyLength">Panjang Kunci:</label>
+              <input
+                type="number"
+                id="keyLength"
+                value="16"
+                min="8"
+                max="256"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="keyType">Tipe Kunci:</label>
+              <select id="keyType">
+                <option value="alphanumeric">Alphanumeric</option>
+                <option value="numeric">Numeric Only</option>
+                <option value="strong">Strong (dengan special char)</option>
+                <option value="hex">Hexadecimal</option>
+                <option value="binary">Binary</option>
+              </select>
+            </div>
+
+            <button
+              class="btn-primary"
+              onclick="generateKey()"
+              style="width: 100%; padding: 12px"
+            >
+              🔑 Generate Key
+            </button>
+          </div>
+
+          <div class="keygen-result">
+            <div class="output-area">
+              <label>Generated Key:</label>
+              <div class="output-box" id="generatedKey"></div>
+              <div class="button-group">
+                <button class="btn-secondary" onclick="copyGeneratedKey()">
+                  📋 Copy
+                </button>
+                <button class="btn-secondary" onclick="downloadKey()">
+                  ⬇️ Download
+                </button>
+              </div>
+            </div>
+
+            <div class="strength-indicator">
+              <label>Kekuatan Kunci:</label>
+              <div id="strengthIndicator"></div>
+            </div>
+
+            <div class="key-suggestions">
+              <h4>Saran Perbaikan:</h4>
+              <ul id="strengthFeedback"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: Perbandingan Cipher -->
+        <section id="compare-tab" class="tab-content">
+          <div class="section-title">Perbandingan Algoritma Cipher</div>
+
+          <div class="compare-controls">
+            <div class="form-group">
+              <label for="compareText">Teks untuk Dibandingkan:</label>
+              <textarea
+                id="compareText"
+                placeholder="Masukkan teks yang akan dienkripsi dengan berbagai cipher..."
+                rows="6"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="compareKey">Kunci:</label>
+              <input type="text" id="compareKey" placeholder="Masukkan kunci" />
+            </div>
+
+            <button
+              class="btn-primary"
+              onclick="performComparison()"
+              style="width: 100%; padding: 12px"
+            >
+              ⚖️ Bandingkan
+            </button>
+          </div>
+
+          <div id="comparisonResults" class="comparison-results">
+            <table id="comparisonTable" class="data-table"></table>
+          </div>
+        </section>
+
+        <section id="benchmark-tab" class="tab-content">
+          <div class="section-title">Benchmark Performa Enkripsi</div>
+
+          <div class="benchmark-controls">
+            <div class="form-group">
+              <label for="benchmarkText">Teks untuk Benchmark:</label>
+              <textarea
+                id="benchmarkText"
+                placeholder="Masukkan teks untuk benchmark..."
+                rows="4"
+              >
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</textarea
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="benchmarkIterations">Jumlah Iterasi:</label>
+              <input
+                type="number"
+                id="benchmarkIterations"
+                value="1000"
+                min="100"
+                max="10000"
+              />
+            </div>
+
+            <button
+              class="btn-primary"
+              onclick="runBenchmark()"
+              style="width: 100%; padding: 12px"
+            >
+              ⏱️ Jalankan Benchmark
+            </button>
+          </div>
+
+          <div id="benchmarkResults" class="benchmark-results">
+            <div id="benchmarkChart"></div>
+            <table id="benchmarkTable" class="data-table"></table>
+          </div>
+        </section>
+        </main>
+      </div>
+
+      <!-- Footer -->
+      <footer>
+        <p>
+          🔐 Aplikasi Kriptografi Advanced v2.0 | Untuk Tujuan Pendidikan | ©
+          2026
+        </p>
+      </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="crypto-algorithms.js"></script>
+    <script src="utils.js"></script>
+    <script src="visualization.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
