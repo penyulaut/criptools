@@ -90,13 +90,13 @@
               <a class="collapse-item" href="realtime.html">Real Time</a>
             </div>
           </div>
-        </li>      
+        </li>
 
         <!-- Divider -->
         <hr class="sidebar-divider" />
 
         <!-- Heading -->
-        <div class="sidebar-heading">Addons</div>       
+        <div class="sidebar-heading">Addons</div>
 
         <!-- Nav Item - Charts -->
         <li class="nav-item">
@@ -120,7 +120,7 @@
         <!-- Sidebar Toggler (Sidebar) -->
         <div class="text-center d-none d-md-inline">
           <button class="rounded-circle border-0" id="sidebarToggle"></button>
-        </div>       
+        </div>
       </ul>
       <!-- End of Sidebar -->
 
@@ -426,13 +426,15 @@
             <div
               class="d-sm-flex align-items-center justify-content-between mb-4"
             >
-              <h1 class="h3 mb-0 text-gray-800">Enkripsi/Dekripsi Cipher Tradisional</h1>
-              <!-- <a
+              <h1 class="h3 mb-0 text-gray-800">
+                Enkripsi/Dekripsi Cipher Tradisional
+              </h1>
+              <a
                 href="#"
                 class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm"
                 ><i class="fas fa-download fa-sm text-white-50"></i> Generate
                 Report</a
-              > -->
+              >
             </div>
 
             <!-- Content Row -->
@@ -444,117 +446,76 @@
                   <!-- Card Header - Dropdown -->
                   <div
                     class="card-header py-3 d-flex flex-column justify-content-between"
-                  >                    
+                  >
                     <div class="card-body">
-                      <div id="basic-encrypt">
-                        <!-- Row 1 -->
-                        <div class="row mb-3">
-                          <div class="col-md-6">
-                            <label>Pilih Cipher:</label>
-                            <select
-                              id="cipherSelect"
-                              class="form-control"
-                              onchange="updateKeyHint()"
-                            >
-                              <option value="vigenere">
-                                Vigenere Standard
-                              </option>
-                              <option value="autokey">Auto-Key Vigenere</option>
-                              <option value="extended">
-                                Extended Vigenere
-                              </option>
-                              <option value="affine">Affine Cipher</option>
-                              <option value="playfair">Playfair Cipher</option>
-                              <option value="hill">Hill Cipher (2x2)</option>
-                            </select>
-                          </div>
-
-                          <div class="col-md-6">
-                            <label>Format Output:</label>
-                            <select id="cipherTextFormat" class="form-control">
-                              <option value="none">Tanpa spasi</option>
-                              <option value="group5">Kelompok 5 huruf</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <!-- Key -->
-                        <div class="mb-3">
-                          <label>Kunci:</label>
-                          <div class="input-group">
-                            <input
-                              type="text"
-                              id="keyInput"
-                              class="form-control"
-                              placeholder="Masukkan kunci"
-                            />
-                            <div class="input-group-append">
-                              <button
-                                class="btn btn-outline-secondary"
-                                onclick="generateSimpleKey()"
-                              >
-                                Generate
-                              </button>
-                            </div>
-                          </div>
-                          <small
-                            id="keyHint"
-                            class="form-text text-muted"
-                          ></small>
-                        </div>
-
-                        <!-- Text -->
-                        <div class="mb-3">
-                          <label>Pesan:</label>
-                          <textarea
-                            id="plaintextInput"
+                      <!-- Controls -->
+                      <div class="row mb-4">
+                        <div class="col-md-4">
+                          <label>Pilih Algoritma:</label>
+                          <select
+                            id="vizAlgorithm"
                             class="form-control"
-                            rows="5"
-                            placeholder="Masukkan plaintext atau ciphertext..."
-                          ></textarea>
+                            onchange="updateVisualization()"
+                          >
+                            <option value="vigenere">Vigenere</option>
+                            <option value="affine">Affine</option>
+                            <option value="playfair">Playfair</option>
+                          </select>
                         </div>
 
-                        <!-- Buttons -->
-                        <div class="mb-3">
-                          <button
-                            class="btn btn-primary mr-2"
-                            onclick="encryptText()"
-                          >
-                            Encrypt
-                          </button>
-                          <button
-                            class="btn btn-success mr-2"
-                            onclick="decryptText()"
-                          >
-                            Decrypt
-                          </button>
-                          <button
-                            class="btn btn-info mr-2"
-                            onclick="copyOutput()"
-                          >
-                            Copy
-                          </button>
-                          <button class="btn btn-danger" onclick="clearForm()">
-                            Clear
-                          </button>
+                        <div class="col-md-4">
+                          <label>Plaintext:</label>
+                          <input
+                            type="text"
+                            id="vizPlaintext"
+                            class="form-control"
+                            placeholder="Max 10 karakter"
+                            maxlength="10"
+                            oninput="updateVisualization()"
+                          />
                         </div>
 
-                        <!-- Output -->
-                        <div class="mb-3">
-                          <label>Output:</label>
-                          <div
-                            class="border p-3 bg-light rounded"
-                            id="basicOutput"
-                            style="min-height: 100px"
-                          ></div>
+                        <div class="col-md-4">
+                          <label>Kunci:</label>
+                          <input
+                            type="text"
+                            id="vizKey"
+                            class="form-control"
+                            placeholder="Masukkan kunci"
+                            oninput="updateVisualization()"
+                          />
                         </div>
+                      </div>
 
-                        <button
-                          class="btn btn-secondary"
-                          onclick="downloadOutput('basic')"
+                      <!-- Visualization Area -->
+                      <div class="mb-4">
+                        <label class="font-weight-bold">Visualisasi:</label>
+                        <div
+                          id="vizContainer"
+                          class="border rounded p-3 bg-light text-center"
+                          style="min-height: 150px"
                         >
-                          ⬇️ Download
-                        </button>
+                          <span class="text-muted"
+                            >Hasil visualisasi akan muncul di sini</span
+                          >
+                        </div>
+                      </div>
+
+                      <!-- Steps -->
+                      <div>
+                        <h6 class="font-weight-bold text-secondary mb-3">
+                          Langkah-langkah Transformasi:
+                        </h6>
+
+                        <div
+                          id="stepsContainer"
+                          class="border rounded p-3 bg-white"
+                          style="min-height: 120px"
+                        >
+                          <span class="text-muted"
+                            >Langkah enkripsi akan ditampilkan di sini</span
+                          >
+                        </div>
                       </div>
                     </div>
                   </div>
