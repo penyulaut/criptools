@@ -56,27 +56,200 @@ class EncryptionVisualizer {
     return steps;
   }
 
-  static visualizePlayfairSquare(key) {
+  static visualizeAffineSteps(plaintext, key) {
+    const normalized = plaintext.toUpperCase().replace(/[^A-Z]/g, "");
+    const keyParts = key.split(",").map((n) => parseInt(n.trim()));
+
+    if (
+      keyParts.length !== 2 ||
+      Number.isNaN(keyParts[0]) ||
+      Number.isNaN(keyParts[1])
+    ) {
+      throw new Error("Kunci Affine harus berupa dua angka, contoh: 5,8");
+    }
+
+    let [a, b] = keyParts;
+
+    a = ((a % 26) + 26) % 26;
+    b = ((b % 26) + 26) % 26;
+
+    const validA = [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25];
+
+    if (!validA.includes(a)) {
+      throw new Error(
+        "Nilai a pada Affine harus relatif prima terhadap 26, contoh: 5,8",
+      );
+    }
+
+    const steps = [];
+
+    for (let i = 0; i < Math.min(normalized.length, 10); i++) {
+      const pChar = normalized[i];
+      const pVal = pChar.charCodeAt(0) - 65;
+      const cVal = (a * pVal + b) % 26;
+      const cChar = String.fromCharCode(cVal + 65);
+
+      steps.push({
+        index: i,
+        plainChar: pChar,
+        plainValue: pVal,
+        aValue: a,
+        bValue: b,
+        cipherValue: cVal,
+        cipherChar: cChar,
+        formula: `(${a} × ${pVal} + ${b}) mod 26 = ${cVal}`,
+      });
+    }
+
+    return steps;
+  }
+
+    static visualizePlayfairSquare(key) {
     const keyNorm = key
       .toUpperCase()
       .replace(/J/g, "I")
       .replace(/[^A-Z]/g, "");
+
     const used = new Set();
     const square = [];
 
-    for (let ch of keyNorm + "ABCDEFGHIKLMNOPQRSTUVWXYZ") {
-      if (!used.has(ch)) {
-        used.add(ch);
-        square.push(ch);
+    // Susun karakter unik dari key terlebih dahulu
+    for (let char of keyNorm) {
+      if (!used.has(char)) {
+        used.add(char);
+        square.push(char);
       }
     }
 
+    // Tambahkan alfabet A-Z tanpa J
+    const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+
+    for (let char of alphabet) {
+      if (!used.has(char)) {
+        used.add(char);
+        square.push(char);
+      }
+    }
+
+    // Bentuk matriks 5x5
     const grid = [];
+
     for (let i = 0; i < 5; i++) {
       grid.push(square.slice(i * 5, i * 5 + 5));
     }
 
     return grid;
+  }
+
+  static visualizePlayfairSteps(plaintext, key) {
+    const square = this.visualizePlayfairSquare(key);
+
+    const normalized = plaintext
+      .toUpperCase()
+      .replace(/J/g, "I")
+      .replace(/[^A-Z]/g, "");
+
+    if (!normalized) {
+      throw new Error("Plaintext Playfair harus mengandung huruf.");
+    }
+
+    const pairs = [];
+    let i = 0;
+
+    // Membentuk pasangan huruf sesuai aturan Playfair
+    while (i < normalized.length) {
+      const firstChar = normalized[i];
+      let secondChar = normalized[i + 1];
+
+      // Jika huruf terakhir tidak punya pasangan
+      if (!secondChar) {
+        secondChar = "X";
+        i += 1;
+      }
+
+      // Jika dua huruf dalam satu pasangan sama
+      else if (firstChar === secondChar) {
+        secondChar = "X";
+        i += 1;
+      }
+
+      // Pasangan normal
+      else {
+        i += 2;
+      }
+
+      pairs.push([firstChar, secondChar]);
+    }
+
+    // Fungsi mencari posisi huruf pada Playfair Square
+    const findPosition = (char) => {
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          if (square[row][col] === char) {
+            return { row, col };
+          }
+        }
+      }
+
+      throw new Error(`Huruf ${char} tidak ditemukan dalam Playfair Square.`);
+    };
+
+    const steps = [];
+
+    // Maksimal 10 pasangan pertama untuk visualisasi
+    pairs.slice(0, 10).forEach(([char1, char2], index) => {
+      const pos1 = findPosition(char1);
+      const pos2 = findPosition(char2);
+
+      let cipher1 = "";
+      let cipher2 = "";
+      let rule = "";
+      let formula = "";
+
+      // Aturan 1: Baris sama
+      if (pos1.row === pos2.row) {
+        cipher1 = square[pos1.row][(pos1.col + 1) % 5];
+        cipher2 = square[pos2.row][(pos2.col + 1) % 5];
+
+        rule = "Baris sama";
+        formula =
+          "Masing-masing huruf digeser satu kolom ke kanan.";
+      }
+
+      // Aturan 2: Kolom sama
+      else if (pos1.col === pos2.col) {
+        cipher1 = square[(pos1.row + 1) % 5][pos1.col];
+        cipher2 = square[(pos2.row + 1) % 5][pos2.col];
+
+        rule = "Kolom sama";
+        formula =
+          "Masing-masing huruf digeser satu baris ke bawah.";
+      }
+
+      // Aturan 3: Membentuk persegi panjang
+      else {
+        cipher1 = square[pos1.row][pos2.col];
+        cipher2 = square[pos2.row][pos1.col];
+
+        rule = "Persegi panjang";
+        formula =
+          "Huruf mengambil karakter pada baris yang sama, tetapi kolom ditukar.";
+      }
+
+      steps.push({
+        index,
+        plainPair: `${char1}${char2}`,
+        firstChar: char1,
+        secondChar: char2,
+        position1: `${char1} (${pos1.row + 1},${pos1.col + 1})`,
+        position2: `${char2} (${pos2.row + 1},${pos2.col + 1})`,
+        rule,
+        formula,
+        cipherPair: `${cipher1}${cipher2}`,
+      });
+    });
+
+    return steps;
   }
 
   static highlightCharacter(text, index) {
@@ -359,6 +532,5 @@ const Visualization = {
   ModalDisplay: ModalDisplay,
 };
 
-// Agar bisa dipanggil dari file JS lain
 window.EncryptionVisualizer = EncryptionVisualizer;
 window.ModalDisplay = ModalDisplay;

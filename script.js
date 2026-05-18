@@ -759,10 +759,12 @@ function updateVisualization() {
     }
 
     let htmlContent = "";
+    let stepsHTML = "";
 
-    // ==================== VIGENERE VISUALIZATION ====================
+    // ==================== VIGENERE ====================
     if (algorithm === "vigenere") {
       const steps = EncryptionVisualizer.visualizeVigenereSteps(plaintext, key);
+      const encrypted = vigenereEncrypt(plaintext, key);
 
       htmlContent += "<h4>Tabel Vigenere - Langkah Demi Langkah:</h4>";
       htmlContent +=
@@ -780,18 +782,34 @@ function updateVisualization() {
             <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(39, 174, 96, 0.1);">${step.keyChar}</td>
             <td style="padding: 10px; text-align: center;">${step.plainValue}</td>
             <td style="padding: 10px; text-align: center;">${step.keyValue}</td>
-            <td style="padding: 10px; text-align: center;">= ${step.formula}</td>
+            <td style="padding: 10px; text-align: center;">${step.formula}</td>
             <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(231, 76, 60, 0.1);">${step.cipherChar}</td>
           </tr>
         `;
       });
 
       htmlContent += "</table>";
+
+      stepsHTML = `
+        <div class="step-item">
+          📥 Plaintext: <strong>${plaintext.toUpperCase()}</strong>
+        </div>
+        <div class="step-item">
+          🔑 Kunci: <strong>${key.toUpperCase()}</strong>
+        </div>
+        <div class="step-item">
+          📊 Proses: Setiap huruf plaintext dijumlahkan dengan huruf kunci secara berulang menggunakan mod 26
+        </div>
+        <div class="step-item">
+          📤 Ciphertext: <strong>${encrypted}</strong>
+        </div>
+      `;
     }
 
-    // ==================== CAESAR VISUALIZATION ====================
+    // ==================== CAESAR ====================
     else if (algorithm === "caesar") {
       const steps = EncryptionVisualizer.visualizeCaesarSteps(plaintext, key);
+      const encrypted = caesarEncrypt(plaintext, key);
 
       htmlContent += "<h4>Tabel Caesar Cipher - Langkah Demi Langkah:</h4>";
       htmlContent +=
@@ -808,74 +826,13 @@ function updateVisualization() {
             <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(52, 152, 219, 0.1);">${step.plainChar}</td>
             <td style="padding: 10px; text-align: center;">${step.plainValue}</td>
             <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(39, 174, 96, 0.1);">${step.shiftValue}</td>
-            <td style="padding: 10px; text-align: center;">= ${step.formula}</td>
+            <td style="padding: 10px; text-align: center;">${step.formula}</td>
             <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(231, 76, 60, 0.1);">${step.cipherChar}</td>
           </tr>
         `;
       });
 
       htmlContent += "</table>";
-    }
-
-    // ==================== PLAYFAIR VISUALIZATION ====================
-    else if (algorithm === "playfair") {
-      const square = EncryptionVisualizer.visualizePlayfairSquare(key);
-
-      htmlContent += "<h4>Playfair Square (5×5):</h4>";
-      htmlContent +=
-        '<table style="width: fit-content; border-collapse: collapse; margin: 15px 0;">';
-
-      square.forEach((row) => {
-        htmlContent += "<tr>";
-
-        row.forEach((char) => {
-          htmlContent += `
-            <td style="
-              width: 40px;
-              height: 40px;
-              border: 2px solid var(--accent-color);
-              text-align: center;
-              font-weight: bold;
-              background-color: rgba(52, 152, 219, 0.1);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            ">${char}</td>
-          `;
-        });
-
-        htmlContent += "</tr>";
-      });
-
-      htmlContent += "</table>";
-    }
-
-    document.getElementById("vizContainer").innerHTML = htmlContent;
-
-    // ==================== STEP EXPLANATION ====================
-    let stepsHTML = "";
-
-    if (algorithm === "vigenere") {
-      const encrypted = vigenereEncrypt(plaintext, key);
-
-      stepsHTML = `
-        <div class="step-item">
-          📥 Plaintext: <strong>${plaintext.toUpperCase()}</strong>
-        </div>
-        <div class="step-item">
-          🔑 Kunci: <strong>${key.toUpperCase()}</strong>
-        </div>
-        <div class="step-item">
-          📊 Proses: Setiap karakter plaintext ditambah nilai kunci secara berulang dengan operasi mod 26
-        </div>
-        <div class="step-item">
-          📤 Ciphertext: <strong>${encrypted}</strong>
-        </div>
-      `;
-    }
-
-    else if (algorithm === "caesar") {
-      const encrypted = caesarEncrypt(plaintext, key);
 
       stepsHTML = `
         <div class="step-item">
@@ -885,7 +842,7 @@ function updateVisualization() {
           🔑 Nilai Pergeseran: <strong>${key}</strong>
         </div>
         <div class="step-item">
-          📊 Proses: Setiap huruf plaintext digeser sebanyak ${key} posisi dalam alfabet menggunakan operasi mod 26
+          📊 Proses: Setiap huruf digeser sebanyak ${key} posisi dalam alfabet menggunakan mod 26
         </div>
         <div class="step-item">
           📤 Ciphertext: <strong>${encrypted}</strong>
@@ -893,7 +850,107 @@ function updateVisualization() {
       `;
     }
 
+    // ==================== AFFINE ====================
+    else if (algorithm === "affine") {
+      const steps = EncryptionVisualizer.visualizeAffineSteps(plaintext, key);
+      const [a, b] = key.split(",").map((n) => parseInt(n.trim()));
+      const encrypted = affineEncrypt(plaintext, a, b);
+
+      htmlContent += "<h4>Tabel Affine Cipher - Langkah Demi Langkah:</h4>";
+      htmlContent +=
+        '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+      htmlContent +=
+        '<tr style="background-color: var(--accent-color); color: white;">';
+      htmlContent +=
+        "<th>No</th><th>Plaintext</th><th>P Value</th><th>a</th><th>b</th><th>Rumus</th><th>Ciphertext</th></tr>";
+
+      steps.forEach((step) => {
+        htmlContent += `
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 10px; text-align: center;">${step.index + 1}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(52, 152, 219, 0.1);">${step.plainChar}</td>
+            <td style="padding: 10px; text-align: center;">${step.plainValue}</td>
+            <td style="padding: 10px; text-align: center;">${step.aValue}</td>
+            <td style="padding: 10px; text-align: center;">${step.bValue}</td>
+            <td style="padding: 10px; text-align: center;">${step.formula}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(231, 76, 60, 0.1);">${step.cipherChar}</td>
+          </tr>
+        `;
+      });
+
+      htmlContent += "</table>";
+
+      stepsHTML = `
+        <div class="step-item">
+          📥 Plaintext: <strong>${plaintext.toUpperCase()}</strong>
+        </div>
+        <div class="step-item">
+          🔑 Kunci: <strong>a = ${a}, b = ${b}</strong>
+        </div>
+        <div class="step-item">
+          📊 Proses: Setiap huruf dihitung dengan rumus <strong>C = (a × P + b) mod 26</strong>
+        </div>
+        <div class="step-item">
+          📤 Ciphertext: <strong>${encrypted}</strong>
+        </div>
+      `;
+    }
+
+    // ==================== PLAYFAIR ====================
     else if (algorithm === "playfair") {
+      const square = EncryptionVisualizer.visualizePlayfairSquare(key);
+      const steps = EncryptionVisualizer.visualizePlayfairSteps(plaintext, key);
+      const encrypted = playfairEncrypt(plaintext, key);
+
+      htmlContent += "<h4>Playfair Square 5×5:</h4>";
+      htmlContent +=
+        '<table style="width: fit-content; border-collapse: collapse; margin: 15px 0;">';
+
+      square.forEach((row) => {
+        htmlContent += "<tr>";
+
+        row.forEach((char) => {
+          htmlContent += `
+            <td style="
+              width: 44px;
+              height: 44px;
+              border: 2px solid var(--accent-color);
+              text-align: center;
+              vertical-align: middle;
+              font-weight: bold;
+              background-color: rgba(52, 152, 219, 0.1);
+            ">${char}</td>
+          `;
+        });
+
+        htmlContent += "</tr>";
+      });
+
+      htmlContent += "</table>";
+
+      htmlContent += "<h4>Proses Enkripsi Pasangan Huruf:</h4>";
+      htmlContent +=
+        '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+      htmlContent +=
+        '<tr style="background-color: var(--accent-color); color: white;">';
+      htmlContent +=
+        "<th>No</th><th>Pasangan</th><th>Posisi Huruf 1</th><th>Posisi Huruf 2</th><th>Aturan</th><th>Hasil</th></tr>";
+
+      steps.forEach((step) => {
+        htmlContent += `
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 10px; text-align: center;">${step.index + 1}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(52, 152, 219, 0.1);">${step.plainPair}</td>
+            <td style="padding: 10px; text-align: center;">${step.position1}</td>
+            <td style="padding: 10px; text-align: center;">${step.position2}</td>
+            <td style="padding: 10px; text-align: left;">${step.rule}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(231, 76, 60, 0.1);">${step.cipherPair}</td>
+          </tr>
+        `;
+      });
+
+      htmlContent += "</table>";
+
       stepsHTML = `
         <div class="step-item">
           📥 Plaintext: <strong>${plaintext.toUpperCase()}</strong>
@@ -902,11 +959,15 @@ function updateVisualization() {
           🔑 Kunci: <strong>${key.toUpperCase()}</strong>
         </div>
         <div class="step-item">
-          📊 Proses: Kunci digunakan untuk membentuk tabel Playfair 5×5 sebagai dasar enkripsi pasangan huruf
+          📊 Proses: Huruf disusun menjadi pasangan, lalu dienkripsi berdasarkan posisi pada Playfair Square 5×5
+        </div>
+        <div class="step-item">
+          📤 Ciphertext: <strong>${encrypted}</strong>
         </div>
       `;
     }
 
+    document.getElementById("vizContainer").innerHTML = htmlContent;
     document.getElementById("stepsContainer").innerHTML = stepsHTML;
   } catch (error) {
     document.getElementById("vizContainer").innerHTML =
