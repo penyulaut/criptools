@@ -1053,18 +1053,340 @@ function performAnalysis() {
 
 // ==================== KEY GENERATOR ====================
 
+// ==================== CIPHER-SPECIFIC KEY GENERATOR ====================
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateLettersOnlyKey(length = 8) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let key = "";
+
+  for (let i = 0; i < length; i++) {
+    key += alphabet[getRandomInt(0, alphabet.length - 1)];
+  }
+
+  return key;
+}
+
+function gcd(a, b) {
+  a = Math.abs(a);
+  b = Math.abs(b);
+
+  while (b !== 0) {
+    const temp = b;
+    b = a % b;
+    a = temp;
+  }
+
+  return a;
+}
+
+function generateAffineKey() {
+  const validA = [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25];
+
+  const a = validA[getRandomInt(0, validA.length - 1)];
+  const b = getRandomInt(0, 25);
+
+  return `${a},${b}`;
+}
+
+function isHillMatrixInvertible(matrix) {
+  const [a, b, c, d] = matrix;
+  const determinant = a * d - b * c;
+  const normalizedDet = ((determinant % 26) + 26) % 26;
+
+  return gcd(normalizedDet, 26) === 1;
+}
+
+function generateHillKey() {
+  let matrix = [];
+
+  do {
+    matrix = [
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+    ];
+  } while (!isHillMatrixInvertible(matrix));
+
+  return matrix.join(",");
+}
+
+function getSelectedCipherForKeyGeneration(target = "basic") {
+  if (target === "basic") {
+    return document.getElementById("cipherSelect")?.value || "vigenere";
+  }
+
+  if (target === "file") {
+    return document.getElementById("fileCipherSelect")?.value || "extended";
+  }
+
+  return "vigenere";
+}
+
+function generateKeyByCipher(cipherType) {
+  switch (cipherType) {
+    case "caesar":
+      return String(getRandomInt(1, 25));
+
+    case "affine":
+      return generateAffineKey();
+
+    case "hill":
+      return generateHillKey();
+
+    case "playfair":
+      return generateLettersOnlyKey(8);
+
+    case "vigenere":
+      return generateLettersOnlyKey(8);
+
+    case "autokey":
+      return generateLettersOnlyKey(6);
+
+    case "extended":
+      return KeyGenerator.generateRandomKey(16);
+
+    default:
+      return KeyGenerator.generateRandomKey(16);
+  }
+}
+
+// ==================== SIMPLE KEY GENERATOR ====================
+
+// ==================== CIPHER-SPECIFIC KEY GENERATOR ====================
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateLettersOnlyKey(length = 8) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let key = "";
+
+  for (let i = 0; i < length; i++) {
+    key += alphabet[getRandomInt(0, alphabet.length - 1)];
+  }
+
+  return key;
+}
+
+function gcd(a, b) {
+  a = Math.abs(a);
+  b = Math.abs(b);
+
+  while (b !== 0) {
+    const temp = b;
+    b = a % b;
+    a = temp;
+  }
+
+  return a;
+}
+
+function generateAffineKey() {
+  const validA = [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25];
+
+  const a = validA[getRandomInt(0, validA.length - 1)];
+  const b = getRandomInt(0, 25);
+
+  return `${a},${b}`;
+}
+
+function isHillMatrixInvertible(matrix) {
+  const [a, b, c, d] = matrix;
+  const determinant = a * d - b * c;
+  const normalizedDet = ((determinant % 26) + 26) % 26;
+
+  return gcd(normalizedDet, 26) === 1;
+}
+
+function generateHillKey() {
+  let matrix = [];
+
+  do {
+    matrix = [
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+    ];
+  } while (!isHillMatrixInvertible(matrix));
+
+  return matrix.join(",");
+}
+
+function getSelectedCipherForKeyGeneration(target = "basic") {
+  if (target === "basic") {
+    return document.getElementById("cipherSelect")?.value || "vigenere";
+  }
+
+  if (target === "file") {
+    return document.getElementById("fileCipherSelect")?.value || "extended";
+  }
+
+  return "vigenere";
+}
+
+function generateKeyByCipher(cipherType) {
+  switch (cipherType) {
+    case "caesar":
+      return String(getRandomInt(1, 25));
+
+    case "affine":
+      return generateAffineKey();
+
+    case "hill":
+      return generateHillKey();
+
+    case "playfair":
+      return generateLettersOnlyKey(8);
+
+    case "vigenere":
+      return generateLettersOnlyKey(8);
+
+    case "autokey":
+      return generateLettersOnlyKey(6);
+
+    case "extended":
+      return KeyGenerator.generateRandomKey(16);
+
+    default:
+      return KeyGenerator.generateRandomKey(16);
+  }
+}
+
+// ==================== SIMPLE KEY GENERATOR ====================
+
+// ==================== CIPHER-SPECIFIC KEY GENERATOR ====================
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generateLettersOnlyKey(length = 8) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let key = "";
+
+  for (let i = 0; i < length; i++) {
+    key += alphabet[getRandomInt(0, alphabet.length - 1)];
+  }
+
+  return key;
+}
+
+function gcd(a, b) {
+  a = Math.abs(a);
+  b = Math.abs(b);
+
+  while (b !== 0) {
+    const temp = b;
+    b = a % b;
+    a = temp;
+  }
+
+  return a;
+}
+
+function generateAffineKey() {
+  const validA = [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25];
+
+  const a = validA[getRandomInt(0, validA.length - 1)];
+  const b = getRandomInt(0, 25);
+
+  return `${a},${b}`;
+}
+
+function isHillMatrixInvertible(matrix) {
+  const [a, b, c, d] = matrix;
+  const determinant = a * d - b * c;
+  const normalizedDet = ((determinant % 26) + 26) % 26;
+
+  return gcd(normalizedDet, 26) === 1;
+}
+
+function generateHillKey() {
+  let matrix = [];
+
+  do {
+    matrix = [
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+      getRandomInt(0, 25),
+    ];
+  } while (!isHillMatrixInvertible(matrix));
+
+  return matrix.join(",");
+}
+
+function getSelectedCipherForKeyGeneration(target = "basic") {
+  if (target === "basic") {
+    return document.getElementById("cipherSelect")?.value || "vigenere";
+  }
+
+  if (target === "file") {
+    return document.getElementById("fileCipherSelect")?.value || "extended";
+  }
+
+  return "vigenere";
+}
+
+function generateKeyByCipher(cipherType) {
+  switch (cipherType) {
+    case "caesar":
+      return String(getRandomInt(1, 25));
+
+    case "affine":
+      return generateAffineKey();
+
+    case "hill":
+      return generateHillKey();
+
+    case "playfair":
+      return generateLettersOnlyKey(8);
+
+    case "vigenere":
+      return generateLettersOnlyKey(8);
+
+    case "autokey":
+      return generateLettersOnlyKey(6);
+
+    case "extended":
+      return KeyGenerator.generateRandomKey(16);
+
+    default:
+      return KeyGenerator.generateRandomKey(16);
+  }
+}
+
+// ==================== SIMPLE KEY GENERATOR ====================
+
 function generateSimpleKey(target = "basic") {
-  const length = 16;
-  const key = KeyGenerator.generateRandomKey(length);
+  const cipherType = getSelectedCipherForKeyGeneration(target);
+  const key = generateKeyByCipher(cipherType);
 
   if (target === "basic") {
-    document.getElementById("keyInput").value = key;
+    const keyInput = document.getElementById("keyInput");
+    if (keyInput) {
+      keyInput.value = key;
+    }
   } else if (target === "file") {
-    document.getElementById("fileKey").value = key;
+    const fileKey = document.getElementById("fileKey");
+    if (fileKey) {
+      fileKey.value = key;
+    }
+  }
+
+  if (typeof updateKeyHint === "function") {
+    updateKeyHint();
   }
 
   showNotification(
-    `🔑 Key berhasil di-generate (${length} karakter)!`,
+    `🔑 Key ${cipherType.toUpperCase()} berhasil di-generate!`,
     "success",
   );
 }
