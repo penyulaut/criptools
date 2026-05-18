@@ -31,6 +31,31 @@ class EncryptionVisualizer {
     return steps;
   }
 
+  static visualizeCaesarSteps(plaintext, shiftKey) {
+    const normalized = plaintext.toUpperCase().replace(/[^A-Z]/g, "");
+    const shift = ((parseInt(shiftKey) % 26) + 26) % 26;
+    const steps = [];
+
+    for (let i = 0; i < Math.min(normalized.length, 10); i++) {
+      const pChar = normalized[i];
+      const pVal = pChar.charCodeAt(0) - 65;
+      const cVal = (pVal + shift) % 26;
+      const cChar = String.fromCharCode(cVal + 65);
+
+      steps.push({
+        index: i,
+        plainChar: pChar,
+        shiftValue: shift,
+        plainValue: pVal,
+        cipherValue: cVal,
+        cipherChar: cChar,
+        formula: `(${pVal} + ${shift}) mod 26 = ${cVal}`,
+      });
+    }
+
+    return steps;
+  }
+
   static visualizePlayfairSquare(key) {
     const keyNorm = key
       .toUpperCase()
@@ -264,6 +289,7 @@ class EncryptionVisualizer {
 
     const algorithmInfo = {
       vigenere: { speed: "⚡⚡⚡", security: "★★☆", encDec: "Ya" },
+      caesar: { speed: "⚡⚡⚡", security: "★☆☆", encDec: "Ya" },
       affine: { speed: "⚡⚡⚡", security: "★★☆", encDec: "Ya" },
       playfair: { speed: "⚡⚡☆", security: "★★★", encDec: "Ya" },
       hill: { speed: "⚡⚡☆", security: "★★★", encDec: "Ya" },
@@ -332,3 +358,7 @@ const Visualization = {
   EncryptionVisualizer: EncryptionVisualizer,
   ModalDisplay: ModalDisplay,
 };
+
+// Agar bisa dipanggil dari file JS lain
+window.EncryptionVisualizer = EncryptionVisualizer;
+window.ModalDisplay = ModalDisplay;

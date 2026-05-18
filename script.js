@@ -106,6 +106,10 @@ const cipherHints = {
     placeholder: "Contoh: KEY",
     hint: "🔤 Gunakan huruf saja, contoh: KEY",
   },
+  caesar: {
+    placeholder: "Contoh: 3",
+    hint: "🔢 Masukkan satu bilangan bulat sebagai nilai pergeseran, contoh: 3",
+  },
   extended: {
     placeholder: "Contoh: ACC, mySecretKey",
     hint: "🔡 Bisa berupa karakter apapun, contoh: ACC, mySecretKey",
@@ -156,6 +160,42 @@ function vigenereEncrypt(plain, key) {
     C += String.fromCharCode(((pi + ki) % 26) + 65);
   }
   return C;
+}
+
+function parseCaesarShift(key) {
+  const shift = Number(key);
+
+  if (!Number.isInteger(shift)) {
+    throw new Error("Kunci Caesar harus berupa bilangan bulat, misalnya 3.");
+  }
+
+  return ((shift % 26) + 26) % 26;
+}
+
+function caesarEncrypt(plain, key) {
+  const P = normalizeText(plain);
+  const shift = parseCaesarShift(key);
+  let C = "";
+
+  for (let ch of P) {
+    const x = ch.charCodeAt(0) - 65;
+    C += String.fromCharCode(((x + shift) % 26) + 65);
+  }
+
+  return C;
+}
+
+function caesarDecrypt(cipher, key) {
+  const C = normalizeText(cipher);
+  const shift = parseCaesarShift(key);
+  let P = "";
+
+  for (let ch of C) {
+    const y = ch.charCodeAt(0) - 65;
+    P += String.fromCharCode(((y - shift + 26) % 26) + 65);
+  }
+
+  return P;
 }
 
 function vigenereDecrypt(cipher, key) {
@@ -386,6 +426,9 @@ function encryptText() {
       case "autokey":
         result = autoKeyEncrypt(text, keyInput);
         break;
+      case "caesar":
+        result = caesarEncrypt(text, keyInput);
+        break;
       case "extended":
         const bytes = new Uint8Array(
           Array.from(text).map((c) => c.charCodeAt(0)),
@@ -451,6 +494,9 @@ function decryptText() {
         break;
       case "autokey":
         result = autoKeyDecrypt(text, keyInput);
+        break;
+      case "caesar":
+        result = caesarDecrypt(text, keyInput);
         break;
       case "extended":
         const bytes = new Uint8Array(
@@ -708,13 +754,16 @@ function updateVisualization() {
     if (!plaintext || !key) {
       document.getElementById("vizContainer").innerHTML =
         "⚠️ Masukkan plaintext dan kunci untuk visualisasi";
+      document.getElementById("stepsContainer").innerHTML = "";
       return;
     }
 
     let htmlContent = "";
 
+    // ==================== VIGENERE VISUALIZATION ====================
     if (algorithm === "vigenere") {
       const steps = EncryptionVisualizer.visualizeVigenereSteps(plaintext, key);
+
       htmlContent += "<h4>Tabel Vigenere - Langkah Demi Langkah:</h4>";
       htmlContent +=
         '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
@@ -736,16 +785,50 @@ function updateVisualization() {
           </tr>
         `;
       });
+
       htmlContent += "</table>";
-    } else if (algorithm === "playfair") {
+    }
+
+    // ==================== CAESAR VISUALIZATION ====================
+    else if (algorithm === "caesar") {
+      const steps = EncryptionVisualizer.visualizeCaesarSteps(plaintext, key);
+
+      htmlContent += "<h4>Tabel Caesar Cipher - Langkah Demi Langkah:</h4>";
+      htmlContent +=
+        '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+      htmlContent +=
+        '<tr style="background-color: var(--accent-color); color: white;">';
+      htmlContent +=
+        "<th>No</th><th>Plaintext</th><th>P Value</th><th>Shift</th><th>+ Mod 26</th><th>Ciphertext</th></tr>";
+
+      steps.forEach((step) => {
+        htmlContent += `
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td style="padding: 10px; text-align: center;">${step.index + 1}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(52, 152, 219, 0.1);">${step.plainChar}</td>
+            <td style="padding: 10px; text-align: center;">${step.plainValue}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(39, 174, 96, 0.1);">${step.shiftValue}</td>
+            <td style="padding: 10px; text-align: center;">= ${step.formula}</td>
+            <td style="padding: 10px; text-align: center; font-weight: bold; background-color: rgba(231, 76, 60, 0.1);">${step.cipherChar}</td>
+          </tr>
+        `;
+      });
+
+      htmlContent += "</table>";
+    }
+
+    // ==================== PLAYFAIR VISUALIZATION ====================
+    else if (algorithm === "playfair") {
       const square = EncryptionVisualizer.visualizePlayfairSquare(key);
+
       htmlContent += "<h4>Playfair Square (5×5):</h4>";
       htmlContent +=
         '<table style="width: fit-content; border-collapse: collapse; margin: 15px 0;">';
 
-      square.forEach((row, rowIdx) => {
+      square.forEach((row) => {
         htmlContent += "<tr>";
-        row.forEach((char, colIdx) => {
+
+        row.forEach((char) => {
           htmlContent += `
             <td style="
               width: 40px;
@@ -760,17 +843,21 @@ function updateVisualization() {
             ">${char}</td>
           `;
         });
+
         htmlContent += "</tr>";
       });
+
       htmlContent += "</table>";
     }
 
     document.getElementById("vizContainer").innerHTML = htmlContent;
 
-    // Tampilkan steps
+    // ==================== STEP EXPLANATION ====================
     let stepsHTML = "";
+
     if (algorithm === "vigenere") {
       const encrypted = vigenereEncrypt(plaintext, key);
+
       stepsHTML = `
         <div class="step-item">
           📥 Plaintext: <strong>${plaintext.toUpperCase()}</strong>
@@ -779,10 +866,43 @@ function updateVisualization() {
           🔑 Kunci: <strong>${key.toUpperCase()}</strong>
         </div>
         <div class="step-item">
-          📊 Proses: Setiap karakter plaintext ditambah nilai kunci (mod 26)
+          📊 Proses: Setiap karakter plaintext ditambah nilai kunci secara berulang dengan operasi mod 26
         </div>
         <div class="step-item">
           📤 Ciphertext: <strong>${encrypted}</strong>
+        </div>
+      `;
+    }
+
+    else if (algorithm === "caesar") {
+      const encrypted = caesarEncrypt(plaintext, key);
+
+      stepsHTML = `
+        <div class="step-item">
+          📥 Plaintext: <strong>${plaintext.toUpperCase()}</strong>
+        </div>
+        <div class="step-item">
+          🔑 Nilai Pergeseran: <strong>${key}</strong>
+        </div>
+        <div class="step-item">
+          📊 Proses: Setiap huruf plaintext digeser sebanyak ${key} posisi dalam alfabet menggunakan operasi mod 26
+        </div>
+        <div class="step-item">
+          📤 Ciphertext: <strong>${encrypted}</strong>
+        </div>
+      `;
+    }
+
+    else if (algorithm === "playfair") {
+      stepsHTML = `
+        <div class="step-item">
+          📥 Plaintext: <strong>${plaintext.toUpperCase()}</strong>
+        </div>
+        <div class="step-item">
+          🔑 Kunci: <strong>${key.toUpperCase()}</strong>
+        </div>
+        <div class="step-item">
+          📊 Proses: Kunci digunakan untuk membentuk tabel Playfair 5×5 sebagai dasar enkripsi pasangan huruf
         </div>
       `;
     }
@@ -791,6 +911,7 @@ function updateVisualization() {
   } catch (error) {
     document.getElementById("vizContainer").innerHTML =
       `❌ Error: ${error.message}`;
+    document.getElementById("stepsContainer").innerHTML = "";
   }
 }
 
