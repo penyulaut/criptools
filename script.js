@@ -590,18 +590,66 @@ function downloadOutput(type) {
 
 // ==================== MODERN ENCRYPTION (AES/RSA) ====================
 
-function generateModernKey() {
-  const length = parseInt(document.getElementById("keySize").value) / 8;
+function generateRandomModernKey(length = 16) {
   const alphabet =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
   let key = "";
 
   for (let i = 0; i < length; i++) {
     key += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
   }
 
-  document.getElementById("modernKey").value = key;
-  showNotification("🔑 Key berhasil di-generate!", "success");
+  return key;
+}
+
+function generateModernKey() {
+  const algorithm = document.getElementById("modernAlgorithm").value;
+  const keyInput = document.getElementById("modernKey");
+  const keySize = parseInt(document.getElementById("keySize").value) || 128;
+
+  let key = "";
+
+  if (algorithm === "aes") {
+    // AESSimplified memakai 16 karakter key
+    key = generateRandomModernKey(16);
+    keyInput.value = key;
+
+    showNotification(
+      "🔑 Key AES Simplified berhasil di-generate! Panjang key: 16 karakter.",
+      "success",
+    );
+  } else if (algorithm === "rsa") {
+    // RSA membuat public-private key pair sendiri
+    appState.currentRSA = new RSASimplified(512);
+
+    keyInput.value = "RSA Key Pair Generated";
+
+    showNotification(
+      "🔑 RSA Key Pair berhasil di-generate! Klik tombol lihat key pair.",
+      "success",
+    );
+  } else if (algorithm === "xor") {
+    // XOR mengikuti ukuran key yang dipilih
+    const length = keySize / 8;
+    key = generateRandomModernKey(length);
+    keyInput.value = key;
+
+    showNotification(
+      `🔑 Key XOR Stream berhasil di-generate! Panjang key: ${length} karakter.`,
+      "success",
+    );
+  } else if (algorithm === "substitution") {
+    // Advanced Substitution memakai seed string
+    const length = keySize / 8;
+    key = generateRandomModernKey(length);
+    keyInput.value = key;
+
+    showNotification(
+      `🔑 Key Advanced Substitution berhasil di-generate! Panjang key: ${length} karakter.`,
+      "success",
+    );
+  }
 }
 
 function encryptModern() {
@@ -615,9 +663,15 @@ function encryptModern() {
       return;
     }
 
-    if (!key) {
+    // Generate key otomatis untuk algoritma selain RSA
+    if (!key && algorithm !== "rsa") {
       generateModernKey();
       key = document.getElementById("modernKey").value;
+    }
+
+    // Generate RSA key pair otomatis jika belum ada
+    if (algorithm === "rsa" && !appState.currentRSA) {
+      generateModernKey();
     }
 
     let result = "";
@@ -625,16 +679,20 @@ function encryptModern() {
     if (algorithm === "aes") {
       const aes = new AESSimplified(key);
       const encrypted = aes.encrypt(plaintext.substring(0, 16));
+
       result = CryptoUtils.textToHex(encrypted);
       appState.currentAES = aes;
     } else if (algorithm === "rsa") {
-      const rsa = new RSASimplified(512);
-      const encrypted = rsa.encrypt(plaintext);
-      result = encrypted.map((n) => n.toString(16).padStart(2, "0")).join("");
-      appState.currentRSA = rsa;
+      if (!appState.currentRSA) {
+        appState.currentRSA = new RSASimplified(512);
+      }
+
+      const encrypted = appState.currentRSA.encrypt(plaintext);
+      result = encrypted.map((n) => n.toString(16)).join(",");
     } else if (algorithm === "xor") {
       const xor = new XORStreamCipher(key);
       const encrypted = xor.encrypt(plaintext);
+
       result = CryptoUtils.textToHex(encrypted);
     } else if (algorithm === "substitution") {
       const sub = new SubstitutionCipherEnhanced(key);
@@ -651,7 +709,7 @@ function encryptModern() {
 function decryptModern() {
   try {
     const algorithm = document.getElementById("modernAlgorithm").value;
-    let key = document.getElementById("modernKey").value;
+    const key = document.getElementById("modernKey").value;
     const ciphertext = document.getElementById("modernInput").value;
 
     if (!ciphertext) {
@@ -661,19 +719,43 @@ function decryptModern() {
 
     let result = "";
 
-    if (algorithm === "aes" && appState.currentAES) {
-      const decrypted = appState.currentAES.decrypt(
-        ciphertext.substring(0, 32),
-      );
-      result = decrypted;
-    } else if (algorithm === "rsa" && appState.currentRSA) {
-      const encrypted = ciphertext.match(/.{1,2}/g).map((h) => parseInt(h, 16));
+    if (algorithm === "aes") {
+      if (!key) {
+        alert("❌ Masukkan key AES terlebih dahulu!");
+        return;
+      }
+
+      const aes = new AESSimplified(key);
+      const ciphertextBytes = CryptoUtils.hexToText(ciphertext);
+      result = aes.decrypt(ciphertextBytes);
+    } else if (algorithm === "rsa") {
+      if (!appState.currentRSA) {
+        alert(
+          "❌ Key pair RSA belum tersedia. Generate key atau lakukan enkripsi RSA terlebih dahulu.",
+        );
+        return;
+      }
+
+      const encrypted = ciphertext
+        .split(",")
+        .map((hexValue) => parseInt(hexValue.trim(), 16));
+
       result = appState.currentRSA.decrypt(encrypted);
     } else if (algorithm === "xor") {
+      if (!key) {
+        alert("❌ Masukkan key XOR terlebih dahulu!");
+        return;
+      }
+
       const xor = new XORStreamCipher(key);
       const ciphertextBytes = CryptoUtils.hexToText(ciphertext);
       result = xor.decrypt(ciphertextBytes);
     } else if (algorithm === "substitution") {
+      if (!key) {
+        alert("❌ Masukkan key Advanced Substitution terlebih dahulu!");
+        return;
+      }
+
       const sub = new SubstitutionCipherEnhanced(key);
       result = sub.decrypt(ciphertext);
     }
