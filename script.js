@@ -30,10 +30,22 @@ function initializeApp() {
   // Initialize key hints
   updateKeyHint();
 
+  if (document.getElementById("realtimeCipher")) {
+    updateRealtimeKeyHint();
+  }
+
   // Add event listeners
   document
     .getElementById("cipherSelect")
     .addEventListener("change", updateKeyHint);
+
+  const realtimeCipher = document.getElementById("realtimeCipher");
+  if (realtimeCipher) {
+    realtimeCipher.addEventListener("change", () => {
+      updateRealtimeKeyHint();
+      updateRealtime();
+    });
+  }
 
   console.log("✅ Aplikasi Kriptografi Advanced siap digunakan");
 }
@@ -784,6 +796,99 @@ function showKeyPair() {
 
 // ==================== REAL-TIME MODE ====================
 
+const realtimeKeyHints = {
+  vigenere: {
+    placeholder: "Contoh: SECRET",
+    hint: "🔤 Gunakan huruf saja, contoh: SECRET",
+  },
+  affine: {
+    placeholder: "Contoh: 5,8",
+    hint: "🔢 Masukkan dua bilangan bulat, contoh: 5,8",
+  },
+  substitution: {
+    placeholder: "Contoh: MySecretKey",
+    hint: "🔐 Bebas karakter, minimal 6 karakter",
+  },
+};
+
+function updateRealtimeKeyHint(messageOverride = "") {
+  const cipher = document.getElementById("realtimeCipher")?.value || "vigenere";
+  const keyInput = document.getElementById("realtimeKey");
+  const keyHint = document.getElementById("realtimeKeyHint");
+
+  if (!keyInput || !keyHint) return;
+
+  const hintData = realtimeKeyHints[cipher];
+  if (hintData) {
+    keyInput.placeholder = hintData.placeholder;
+    keyHint.textContent = messageOverride || hintData.hint;
+    keyHint.className = `form-text ${messageOverride ? "text-danger" : "text-muted"}`;
+  }
+}
+
+function validateRealtimeKey(cipher, key) {
+  if (cipher === "vigenere") {
+    if (!/^[a-zA-Z]+$/.test(key)) {
+      return {
+        valid: false,
+        message: "❌ Key Vigenere harus berupa huruf saja (A-Z).",
+      };
+    }
+  }
+
+  if (cipher === "affine") {
+    const parts = key.split(",").map((n) => parseInt(n.trim(), 10));
+    const a = parts[0];
+    const b = parts[1];
+
+    if (!Number.isInteger(a) || !Number.isInteger(b)) {
+      return {
+        valid: false,
+        message: "❌ Key Affine harus berbentuk dua angka: a,b.",
+      };
+    }
+
+    if (gcd(a, 26) !== 1) {
+      return {
+        valid: false,
+        message:
+          "❌ Nilai a harus relatif prima dengan 26 (misal: 1,3,5,7,9,11,15,17,19,21,23,25).",
+      };
+    }
+  }
+
+  if (cipher === "substitution") {
+    if (key.length < 6) {
+      return {
+        valid: false,
+        message: "❌ Key Substitution minimal 6 karakter.",
+      };
+    }
+  }
+
+  return { valid: true, message: "" };
+}
+
+function generateRealtimeKey() {
+  const cipher = document.getElementById("realtimeCipher")?.value || "vigenere";
+  const keyInput = document.getElementById("realtimeKey");
+  if (!keyInput) return;
+
+  let key = "";
+  if (cipher === "vigenere") {
+    key = generateLettersOnlyKey(8);
+  } else if (cipher === "affine") {
+    key = generateAffineKey();
+  } else if (cipher === "substitution") {
+    key = generateRandomModernKey(12);
+  }
+
+  keyInput.value = key;
+  updateRealtimeKeyHint();
+  updateRealtime();
+  showNotification("✅ Key berhasil di-generate!", "success");
+}
+
 function toggleRealtimeMode() {
   appState.realtimeMode = !appState.realtimeMode;
   const status = document.getElementById("realtimeStatus");
@@ -805,6 +910,15 @@ function updateRealtime() {
       document.getElementById("realtimeOutput").textContent = "";
       return;
     }
+
+    const keyValidation = validateRealtimeKey(cipher, key);
+    if (!keyValidation.valid) {
+      updateRealtimeKeyHint(keyValidation.message);
+      document.getElementById("realtimeOutput").textContent = "";
+      return;
+    }
+
+    updateRealtimeKeyHint();
 
     let output = "";
 
@@ -1203,7 +1317,9 @@ function getSelectedCipherForKeyGeneration(target = "basic") {
   }
 
   if (target === "file") {
-    return document.getElementById("fileCipherSelect")?.value || "extended";
+    const rawValue = document.getElementById("fileAlgorithm")?.value;
+    const normalized = rawValue ? rawValue.trim().toLowerCase() : "";
+    return normalized || "extended";
   }
 
   return "vigenere";
@@ -1231,6 +1347,12 @@ function generateKeyByCipher(cipherType) {
 
     case "extended":
       return KeyGenerator.generateRandomKey(16);
+
+    case "aes":
+      return generateRandomModernKey(16);
+
+    case "xor":
+      return generateRandomModernKey(16);
 
     default:
       return KeyGenerator.generateRandomKey(16);
@@ -1307,7 +1429,9 @@ function getSelectedCipherForKeyGeneration(target = "basic") {
   }
 
   if (target === "file") {
-    return document.getElementById("fileCipherSelect")?.value || "extended";
+    const rawValue = document.getElementById("fileAlgorithm")?.value;
+    const normalized = rawValue ? rawValue.trim().toLowerCase() : "";
+    return normalized || "extended";
   }
 
   return "vigenere";
@@ -1335,6 +1459,12 @@ function generateKeyByCipher(cipherType) {
 
     case "extended":
       return KeyGenerator.generateRandomKey(16);
+
+    case "aes":
+      return generateRandomModernKey(16);
+
+    case "xor":
+      return generateRandomModernKey(16);
 
     default:
       return KeyGenerator.generateRandomKey(16);
@@ -1411,7 +1541,9 @@ function getSelectedCipherForKeyGeneration(target = "basic") {
   }
 
   if (target === "file") {
-    return document.getElementById("fileCipherSelect")?.value || "extended";
+    const rawValue = document.getElementById("fileAlgorithm")?.value;
+    const normalized = rawValue ? rawValue.trim().toLowerCase() : "";
+    return normalized || "extended";
   }
 
   return "vigenere";
@@ -1439,6 +1571,12 @@ function generateKeyByCipher(cipherType) {
 
     case "extended":
       return KeyGenerator.generateRandomKey(16);
+
+    case "aes":
+      return generateRandomModernKey(16);
+
+    case "xor":
+      return generateRandomModernKey(16);
 
     default:
       return KeyGenerator.generateRandomKey(16);
@@ -1450,6 +1588,7 @@ function generateKeyByCipher(cipherType) {
 function generateSimpleKey(target = "basic") {
   const cipherType = getSelectedCipherForKeyGeneration(target);
   const key = generateKeyByCipher(cipherType);
+  let notificationMessage = `🔑 Key ${cipherType.toUpperCase()} berhasil di-generate!`;
 
   if (target === "basic") {
     const keyInput = document.getElementById("keyInput");
@@ -1461,16 +1600,24 @@ function generateSimpleKey(target = "basic") {
     if (fileKey) {
       fileKey.value = key;
     }
+
+    if (cipherType === "aes") {
+      notificationMessage =
+        "🔑 Key AES Simplified berhasil di-generate! Panjang key: 16 karakter.";
+    } else if (cipherType === "xor") {
+      notificationMessage =
+        "🔑 Key XOR Stream berhasil di-generate! Panjang key: 16 karakter.";
+    } else if (cipherType === "extended") {
+      notificationMessage =
+        "🔑 Key Extended Vigenere berhasil di-generate! Panjang key: 16 karakter.";
+    }
   }
 
   if (typeof updateKeyHint === "function") {
     updateKeyHint();
   }
 
-  showNotification(
-    `🔑 Key ${cipherType.toUpperCase()} berhasil di-generate!`,
-    "success",
-  );
+  showNotification(notificationMessage, "success");
 }
 
 function generateKey() {
@@ -1716,6 +1863,101 @@ function handleFileUpload() {
   fileInfo.classList.add("show");
 }
 
+function bytesToLatin1String(bytes) {
+  let result = "";
+  for (let i = 0; i < bytes.length; i++) {
+    result += String.fromCharCode(bytes[i]);
+  }
+  return result;
+}
+
+function latin1StringToBytes(text) {
+  const bytes = new Uint8Array(text.length);
+  for (let i = 0; i < text.length; i++) {
+    bytes[i] = text.charCodeAt(i) & 0xff;
+  }
+  return bytes;
+}
+
+function buildOutputFileName(originalName, prefix) {
+  if (prefix === "decrypted" && originalName.startsWith("encrypted_")) {
+    return originalName.replace(/^encrypted_/, "");
+  }
+  return `${prefix}_${originalName}`;
+}
+
+function aesEncryptBytes(bytes, key) {
+  const aes = new AESSimplified(key);
+  const blockSize = 16;
+  const header = new Uint8Array(8);
+  header.set([65, 69, 83, 49]);
+  const lengthView = new DataView(header.buffer);
+  lengthView.setUint32(4, bytes.length, true);
+
+  const paddedLength = Math.ceil(bytes.length / blockSize) * blockSize;
+  const padded = new Uint8Array(paddedLength);
+  padded.set(bytes);
+
+  const encrypted = new Uint8Array(paddedLength);
+  for (let offset = 0; offset < paddedLength; offset += blockSize) {
+    const block = padded.subarray(offset, offset + blockSize);
+    const blockText = bytesToLatin1String(block);
+    const encText = aes.encrypt(blockText);
+    encrypted.set(latin1StringToBytes(encText), offset);
+  }
+
+  const output = new Uint8Array(header.length + encrypted.length);
+  output.set(header, 0);
+  output.set(encrypted, header.length);
+  return output;
+}
+
+function aesDecryptBytes(bytes, key) {
+  const aes = new AESSimplified(key);
+  const blockSize = 16;
+  let payload = bytes;
+  let originalLength = bytes.length;
+
+  if (bytes.length >= 8) {
+    const header = bytes.subarray(0, 8);
+    if (
+      header[0] === 65 &&
+      header[1] === 69 &&
+      header[2] === 83 &&
+      header[3] === 49
+    ) {
+      const lengthView = new DataView(header.buffer, header.byteOffset, 8);
+      originalLength = lengthView.getUint32(4, true);
+      payload = bytes.subarray(8);
+    }
+  }
+
+  if (payload.length % blockSize !== 0) {
+    throw new Error("Ukuran ciphertext AES tidak valid.");
+  }
+
+  const decrypted = new Uint8Array(payload.length);
+  for (let offset = 0; offset < payload.length; offset += blockSize) {
+    const block = payload.subarray(offset, offset + blockSize);
+    const blockText = bytesToLatin1String(block);
+    const state = aes.stringToState(blockText);
+
+    for (let round = 9; round >= 0; round--) {
+      aes.addRoundKey(state, round);
+      if (round < 9) {
+        aes.invMixColumns(state);
+      }
+      aes.invShiftRows(state);
+      aes.invSubBytes(state);
+    }
+
+    const decText = aes.stateToString(state);
+    decrypted.set(latin1StringToBytes(decText), offset);
+  }
+
+  return decrypted.subarray(0, Math.min(originalLength, decrypted.length));
+}
+
 function encryptFile() {
   const fileInput = document.getElementById("fileInput");
   const file = fileInput.files[0];
@@ -1747,19 +1989,19 @@ function encryptFile() {
     if (algorithm === "extended") {
       encrypted = extendedVigenereEncrypt(bytes, key);
     } else if (algorithm === "aes") {
-      // Simplified AES for file
-      const aes = new AESSimplified(key);
-      encrypted = new Uint8Array(
-        Array.from(content).map((c) => c.charCodeAt(0)),
-      );
-      // Note: In production, use proper block cipher mode
+      encrypted = aesEncryptBytes(bytes, key);
+    } else if (algorithm === "xor") {
+      const xor = new XORStreamCipher(key);
+      const text = bytesToLatin1String(bytes);
+      const encryptedText = xor.encrypt(text);
+      encrypted = latin1StringToBytes(encryptedText);
     }
 
     const blob = new Blob([encrypted]);
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `encrypted_${file.name}`;
+    a.download = buildOutputFileName(file.name, "encrypted");
     a.click();
     URL.revokeObjectURL(url);
 
@@ -1770,8 +2012,63 @@ function encryptFile() {
 }
 
 function decryptFile() {
-  // Similar to encryptFile but for decryption
-  showNotification("🔄 Fitur decrypt file sedang dikembangkan", "info");
+  const fileInput = document.getElementById("fileInput");
+  const file = fileInput.files[0];
+  const algorithm = document.getElementById("fileAlgorithm").value;
+  const key = document.getElementById("fileKey").value;
+
+  if (!file) {
+    alert("❌ Pilih file terlebih dahulu!");
+    return;
+  }
+
+  if (!algorithm) {
+    alert("❌ Pilih algoritma!");
+    return;
+  }
+
+  if (!key) {
+    alert("❌ Masukkan kunci!");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const content = e.target.result;
+      const bytes = new Uint8Array(content);
+
+      let decrypted = bytes;
+
+      if (algorithm === "extended") {
+        decrypted = extendedVigenereDecrypt(bytes, key);
+      } else if (algorithm === "aes") {
+        decrypted = aesDecryptBytes(bytes, key);
+      } else if (algorithm === "xor") {
+        const xor = new XORStreamCipher(key);
+        const text = bytesToLatin1String(bytes);
+        const decryptedText = xor.decrypt(text);
+        decrypted = latin1StringToBytes(decryptedText);
+      }
+
+      const blob = new Blob([decrypted]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = buildOutputFileName(file.name, "decrypted");
+      a.click();
+      URL.revokeObjectURL(url);
+
+      showNotification(
+        "✅ File berhasil didekripsi dan didownload!",
+        "success",
+      );
+    } catch (error) {
+      alert(`❌ Error: ${error.message}`);
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
 }
 
 // ==================== HISTORY MODAL ====================
